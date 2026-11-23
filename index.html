@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Passa ou Repassa - Arte e Música</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: #121212; color: #ffffff; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; padding: 30px; }
+    .container { max-width: 1000px; width: 100%; }
+    .cabecalho { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-size: 1.3rem; color: #ff9800; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+    .card { background-color: #1e1e1e; padding: 40px; border-radius: 20px; border: 2px solid #333; box-shadow: 0 10px 30px rgba(0,0,0,0.6); margin-bottom: 25px; }
+    #pergunta { font-size: 2.3rem; font-weight: bold; line-height: 1.3; margin-bottom: 30px; color: #ffffff; }
+    .alternativas { display: grid; grid-template-columns: 1fr; gap: 15px; }
+    .opcao { background-color: #2a2a2a; padding: 18px 25px; border-radius: 12px; font-size: 1.7rem; border: 2px solid #3d3d3d; transition: all 0.3s ease; }
+    .opcao.correta { background-color: #1b5e20; border-color: #4caf50; color: #ffffff; font-weight: bold; transform: scale(1.02); box-shadow: 0 0 20px rgba(76, 175, 80, 0.4); }
+    .controles { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
+    button { border: none; padding: 15px 30px; font-size: 1.2rem; font-weight: bold; border-radius: 50px; cursor: pointer; transition: transform 0.1s, opacity 0.2s; }
+    button:active { transform: scale(0.95); }
+    .btn-sortear { background-color: #ff9800; color: #121212; }
+    .btn-resposta { background-color: #4caf50; color: #ffffff; }
+    .instrucao { text-align: center; margin-top: 15px; color: #999; font-size: 1.1rem; }
+    kbd { background-color: #333; padding: 3px 8px; border-radius: 5px; color: #fff; border: 1px solid #555; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="cabecalho">
+      <span id="status-questao">Passa ou Repassa • Arte e Música</span>
+      <span id="contador">Restantes: 25 / 25</span>
+    </div>
+    <div class="card">
+      <div id="pergunta">Pressione ESPAÇO para sortear a primeira pergunta!</div>
+      <div class="alternativas" id="lista-alternativas"></div>
+    </div>
+    <div class="controles">
+      <button class="btn-sortear" onclick="sortearPergunta()">Sortear Pergunta (Espaço)</button>
+      <button class="btn-resposta" onclick="mostrarResposta()">Mostrar Resposta (R)</button>
+    </div>
+    <p class="instrucao">Atalhos do teclado: <kbd>Espaço</kbd> para nova pergunta | <kbd>R</kbd> para revelar a resposta</p>
+  </div>
+
+  <script>
+    const questoes = [
+      { n: 1, p: "Na performance, qual é o principal instrumento do artista?", opcoes: ["A) Tela e tinta", "B) O próprio corpo", "C) Argila", "D) Partitura"], correta: 1 },
+      { n: 2, p: "O que significa dizer que a performance é \"efêmera\"?", opcoes: ["A) Dura séculos", "B) Acontece só ao vivo", "C) Usa lixo reciclável", "D) Ocorre uma vez por ano"], correta: 1 },
+      { n: 3, p: "O que é \"hibridismo\" na arte?", opcoes: ["A) Arte feita no exterior", "B) Mistura de várias artes (dança, som, teatro)", "C) Arte digital", "D) Arte sem movimento"], correta: 1 },
+      { n: 4, p: "Quem pintava jogando tinta em telas no chão (dripping)?", opcoes: ["A) Allan Kaprow", "B) Claude Debussy", "C) Jackson Pollock", "D) Hélio Oiticica"], correta: 2 },
+      { n: 5, p: "Quem criou o termo happening nos anos 1950?", opcoes: ["A) Marina Abramović", "B) Flávio de Carvalho", "C) Allan Kaprow", "D) Arnold Schönberg"], correta: 2 },
+      { n: 6, p: "Qual é a principal característica do happening?", opcoes: ["A) Roteiro decorado", "B) Improvisação com o público", "C) Plateia em silêncio no teatro", "D) Pintura com pincel fino"], correta: 1 },
+      { n: 7, p: "O que a arte sensorial estimula além da visão?", opcoes: ["A) Apenas a memória", "B) Tato, olfato e paladar", "C) Leitura rápida", "D) Apenas a audição"], correta: 1 },
+      { n: 8, p: "Qual movimento brasileiro dos anos 1950 destacou a arte sensorial?", opcoes: ["A) Barroco", "B) Arcadismo", "C) Neoconcretismo", "D) Parnasianismo"], correta: 2 },
+      { n: 9, p: "Quem criou a série de esculturas \"Bichos\" (1960)?", opcoes: ["A) Tarsila do Amaral", "B) Anita Malfatti", "C) Lygia Clark", "D) Beatriz Milhazes"], correta: 2 },
+      { n: 10, p: "Do que são feitas as esculturas \"Bichos\", de Lygia Clark?", opcoes: ["A) Gelo", "B) Placas de metal com dobradiças", "C) Fios de lã", "D) Garrafas de vidro"], correta: 1 },
+      { n: 11, p: "Em que década a performance virou um movimento artístico?", opcoes: ["A) 1920", "B) 1960", "C) 1990", "D) 1880"], correta: 1 },
+      { n: 12, p: "Como os artistas se apresentam na performance \"Cegos\"?", opcoes: ["A) Vestidos de palhaços", "B) Como executivos vendados e cobertos de argila", "C) Deitados no chão", "D) Tocando violino"], correta: 1 },
+      { n: 13, p: "Quem foi um dos pioneiros da performance no Brasil nos anos 1950?", opcoes: ["A) Flávio de Carvalho", "B) Heitor Villa-Lobos", "C) Ferreira Gullar", "D) Frédéric Chopin"], correta: 0 },
+      { n: 14, p: "Em que ano ocorreu a performance \"Experiência nº 3\"?", opcoes: ["A) 1922", "B) 1956", "C) 1988", "D) 2010"], correta: 1 },
+      { n: 15, p: "O que Flávio de Carvalho vestia na \"Experiência nº 3\"?", opcoes: ["A) Armadura de ferro", "B) Traje de verão com saia e meias arrastão", "C) Uniforme militar", "D) Fantasia de carnaval"], correta: 1 },
+      { n: 16, p: "O que Flávio de Carvalho criticava com essa roupa?", opcoes: ["A) O preço dos tecidos", "B) O uso de ternos quentes no calor do Brasil", "C) A falta de sapatos", "D) Os desfiles de moda"], correta: 1 },
+      { n: 17, p: "Quem criou os \"Parangolés\"?", opcoes: ["A) Jackson Pollock", "B) Lygia Clark", "C) Hélio Oiticica", "D) Beethoven"], correta: 2 },
+      { n: 18, p: "Como o público participa dos \"Parangolés\"?", opcoes: ["A) Olhando de longe", "B) Vestindo e dançando com as capas", "C) Pintando as paredes", "D) Tocando instrumentos"], correta: 1 },
+      { n: 19, p: "Quem fez a performance \"A Artista Está Presente\" (2010)?", opcoes: ["A) Marina Abramović", "B) Lygia Clark", "C) Frida Kahlo", "D) Yayoi Kusama"], correta: 0 },
+      { n: 20, p: "O que acontecia em \"A Artista Está Presente\"?", opcoes: ["A) A artista dançava sem parar", "B) A artista e o público se olhavam em silêncio", "C) O público pintava a artista", "D) A artista lia cartas"], correta: 1 },
+      { n: 21, p: "Quando aconteceu o Romantismo na música?", opcoes: ["A) 1500 a 1600", "B) 1810 ao início do século XX", "C) 1950 até hoje", "D) Idade Média"], correta: 1 },
+      { n: 22, p: "Qual evento levou a música dos palácios para a burguesia?", opcoes: ["A) Queda do Muro de Berlim", "B) Revolução Francesa", "C) Segunda Guerra Mundial", "D) Chegada à Lua"], correta: 1 },
+      { n: 23, p: "O que marca a música do Romantismo?", opcoes: ["A) Sons eletrônicos", "B) Emoção intensa, lendas e natureza", "C) Orquestras pequenas", "D) Falta de sentimentos"], correta: 1 },
+      { n: 24, p: "Quais instrumentos se destacaram no Romantismo?", opcoes: ["A) Guitarra e bateria", "B) Piano e violino", "C) Agogô e reco-reco", "D) Flauta doce e triângulo"], correta: 1 },
+      { n: 25, p: "Qual compositor francês criou uma música mais \"leve e colorida\"?", opcoes: ["A) Beethoven", "B) Claude Debussy", "C) Bach", "D) Mozart"], correta: 1 }
+    ];
+
+    let disponiveis = [...questoes];
+    let questaoAtual = null;
+
+    function sortearPergunta() {
+      if (disponiveis.length === 0) {
+        document.getElementById("status-questao").textContent = "Fim de Jogo!";
+        document.getElementById("pergunta").textContent = "Todas as 25 perguntas foram sorteadas! Aperte F5 para reiniciar.";
+        document.getElementById("lista-alternativas").innerHTML = "";
+        return;
+      }
+
+      const indice = Math.floor(Math.random() * disponiveis.length);
+      questaoAtual = disponiveis.splice(indice, 1)[0];
+
+      document.getElementById("status-questao").textContent = `Questão #${questaoAtual.n}`;
+      document.getElementById("contador").textContent = `Restantes: ${disponiveis.length} / ${questoes.length}`;
+      document.getElementById("pergunta").textContent = questaoAtual.p;
+
+      const lista = document.getElementById("lista-alternativas");
+      lista.innerHTML = "";
+
+      questaoAtual.opcoes.forEach((texto, i) => {
+        const div = document.createElement("div");
+        div.className = "opcao";
+        div.textContent = texto;
+        div.dataset.index = i;
+        lista.appendChild(div);
+      });
+    }
+
+    function mostrarResposta() {
+      if (!questaoAtual) return;
+      document.querySelectorAll(".opcao").forEach((opcao) => {
+        if (parseInt(opcao.dataset.index) === questaoAtual.correta) {
+          opcao.classList.add("correta");
+        }
+      });
+    }
+
+    document.addEventListener("keydown", (e) => {
+      if (e.code === "Space") { e.preventDefault(); sortearPergunta(); }
+      else if (e.key.toLowerCase() === "r") { mostrarResposta(); }
+    });
+  </script>
+</body>
+</html>
